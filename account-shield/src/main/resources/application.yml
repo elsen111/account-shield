@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: account-shield
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/account_shield_db
+    username: postgres
+    password: ${DB_PASSWORD:fallback_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+    open-in-view: false
+
+    show-sql: true
+
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+
+jwt:
+  secret: 2f9db91d7d5a58e7f92d88c47b6b90c82e54e8b72ef42c6d4d51f4d73f24fd53
+  access-expiration: 900000
+  refresh-expiration: 604800000
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
