@@ -4,6 +4,10 @@ import com.accountshield.common.ApiResponse;
 import com.accountshield.dto.admin.AdminUserResponse;
 import com.accountshield.dto.admin.ChangeRoleRequest;
 import com.accountshield.dto.admin.ChangeStatusRequest;
+import com.accountshield.entity.UserEntity;
+import com.accountshield.exception.ConflictException;
+import com.accountshield.exception.UserNotFoundException;
+import com.accountshield.repository.UserRepository;
 import com.accountshield.service.AdminUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,7 +16,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -27,6 +30,7 @@ import java.util.UUID;
 public class AdminUserController {
 
     private final AdminUserService adminUserService;
+    private final UserRepository userRepository;
 
     @Operation(summary = "Get all users")
     @GetMapping
@@ -56,6 +60,14 @@ public class AdminUserController {
             @PathVariable UUID userId,
             @RequestBody ChangeRoleRequest request
             ) {
+
+        UserEntity user = userRepository.findById(userId).orElseThrow(
+                () -> new UserNotFoundException("User not found")
+        );
+
+        if(user.getRole() == request.getRole()) {
+            throw new ConflictException("This user is already assigned to this role");
+        }
 
         AdminUserResponse response = adminUserService.assignRole(userId, request);
 

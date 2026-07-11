@@ -1,9 +1,10 @@
-package com.accountshield.service;
+package com.accountshield.service.impl;
 
 import com.accountshield.entity.UserEntity;
 import com.accountshield.exception.AccountLockedException;
 import com.accountshield.repository.UserRepository;
 import com.accountshield.security.utils.LoginSecurityProperties;
+import com.accountshield.service.LoginAttemptService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

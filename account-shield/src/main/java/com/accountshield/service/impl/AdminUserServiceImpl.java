@@ -1,14 +1,13 @@
-package com.accountshield.service;
+package com.accountshield.service.impl;
 
 import com.accountshield.dto.admin.AdminUserResponse;
 import com.accountshield.dto.admin.ChangeRoleRequest;
 import com.accountshield.dto.admin.ChangeStatusRequest;
 import com.accountshield.entity.UserEntity;
-import com.accountshield.enums.Role;
-import com.accountshield.enums.UserStatus;
 import com.accountshield.exception.UserNotFoundException;
 import com.accountshield.mapper.UserMapper;
 import com.accountshield.repository.UserRepository;
+import com.accountshield.service.AdminUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

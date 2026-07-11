@@ -4,7 +4,6 @@ import com.accountshield.common.ApiResponse;
 import com.accountshield.dto.common.UserResponse;
 import com.accountshield.dto.profile.ChangePasswordRequest;
 import com.accountshield.dto.profile.UpdateProfileRequest;
-import com.accountshield.entity.UserEntity;
 import com.accountshield.service.ProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,7 +1,6 @@
 package com.accountshield.service;
 
 import com.accountshield.entity.UserEntity;
-import org.springframework.security.core.userdetails.User;
 
 public interface LoginAttemptService {
 

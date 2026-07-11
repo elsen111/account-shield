@@ -1,4 +1,4 @@
-package com.accountshield.service;
+package com.accountshield.service.impl;
 
 
 import com.accountshield.dto.auth.AuthResponse;
@@ -7,6 +7,7 @@ import com.accountshield.entity.UserEntity;
 import com.accountshield.exception.InvalidTokenException;
 import com.accountshield.repository.RefreshTokenRepository;
 import com.accountshield.security.jwt.JwtProperties;
+import com.accountshield.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

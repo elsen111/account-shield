@@ -1,4 +1,4 @@
-package com.accountshield.service;
+package com.accountshield.service.impl;
 
 import com.accountshield.dto.auth.*;
 import com.accountshield.dto.common.UserResponse;
@@ -14,6 +14,10 @@ import com.accountshield.security.jwt.JwtProperties;
 import com.accountshield.security.jwt.JwtService;
 import com.accountshield.security.utils.EmailVerificationProperties;
 import com.accountshield.security.utils.SecurityUtils;
+import com.accountshield.service.AuthService;
+import com.accountshield.service.EmailService;
+import com.accountshield.service.LoginAttemptService;
+import com.accountshield.service.RefreshTokenService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,7 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final JwtProperties  jwtProperties;
 
-    private final LoginAttemptService  loginAttemptService;
+    private final LoginAttemptService loginAttemptService;
 
     private final EmailService emailService;
     private final EmailVerificationProperties verificationProperties;

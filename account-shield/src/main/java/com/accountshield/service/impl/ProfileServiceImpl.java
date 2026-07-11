@@ -1,4 +1,4 @@
-package com.accountshield.service;
+package com.accountshield.service.impl;
 
 import com.accountshield.dto.common.UserResponse;
 import com.accountshield.dto.profile.ChangePasswordRequest;
@@ -8,10 +8,9 @@ import com.accountshield.exception.BadRequestException;
 import com.accountshield.exception.UserNotFoundException;
 import com.accountshield.mapper.UserMapper;
 import com.accountshield.repository.UserRepository;
-import com.accountshield.security.jwt.JwtService;
 import com.accountshield.security.utils.SecurityUtils;
+import com.accountshield.service.ProfileService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

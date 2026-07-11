@@ -3,8 +3,6 @@ package com.accountshield.service;
 import com.accountshield.dto.admin.AdminUserResponse;
 import com.accountshield.dto.admin.ChangeRoleRequest;
 import com.accountshield.dto.admin.ChangeStatusRequest;
-import com.accountshield.enums.Role;
-import com.accountshield.enums.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

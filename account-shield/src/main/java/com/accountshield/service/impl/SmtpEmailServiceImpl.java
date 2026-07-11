@@ -1,7 +1,8 @@
-package com.accountshield.service;
+package com.accountshield.service.impl;
 
 import com.accountshield.security.utils.AppMailProperties;
 import com.accountshield.security.utils.EmailVerificationProperties;
+import com.accountshield.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
