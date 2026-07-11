@@ -1,24 +1,26 @@
 package com.accountshield.service;
 
+import com.accountshield.dto.auth.AuthResponse;
 import com.accountshield.dto.auth.LoginRequest;
-import com.accountshield.dto.auth.TokenResponse;
+import com.accountshield.dto.auth.RefreshTokenRequest;
 import com.accountshield.dto.auth.RegisterRequest;
 import com.accountshield.dto.common.UserResponse;
+import com.accountshield.entity.RefreshTokenEntity;
 import com.accountshield.entity.UserEntity;
 import com.accountshield.enums.Role;
 import com.accountshield.enums.UserStatus;
-import com.accountshield.exception.BadRequestException;
 import com.accountshield.exception.EmailExistsException;
 import com.accountshield.exception.UserNotFoundException;
 import com.accountshield.mapper.UserMapper;
 import com.accountshield.repository.UserRepository;
 import com.accountshield.security.custom.CustomUserDetails;
+import com.accountshield.security.jwt.JwtProperties;
 import com.accountshield.security.jwt.JwtService;
+import com.accountshield.security.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +34,10 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
+    private final RefreshTokenService refreshTokenService;
+
     private final JwtService jwtService;
+    private final JwtProperties  jwtProperties;
 
     @Override
     @Transactional
@@ -54,18 +59,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public TokenResponse login(LoginRequest request) {
-
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
-                    )
-            );
-        } catch (AuthenticationException ex) {
-            throw new BadRequestException("Invalid email or password.");
-        }
+    public AuthResponse login(LoginRequest request) {
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -76,19 +70,62 @@ public class AuthServiceImpl implements AuthService {
 
         UserEntity user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(
-                        () ->  new UserNotFoundException("User not found.")
+                        () -> new UserNotFoundException("User not found with email: " + request.getEmail())
                 );
 
-        CustomUserDetails userDetails =
-                new CustomUserDetails(user);
+        String accessToken = jwtService.generateAccessToken(
+                new CustomUserDetails(user)
+        );
 
-        String token =
-                jwtService.generateAccessToken(userDetails);
+        RefreshTokenEntity refreshToken =
+                refreshTokenService.create(user);
 
-        return TokenResponse.builder()
-                .accessToken(token)
-                .refreshToken(null)
-                .expiresIn(3600L)
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken.getToken())
+                .expiresIn(jwtProperties.getAccessExpiration())
                 .build();
+
+    }
+
+    @Override
+    public AuthResponse refresh(
+            RefreshTokenRequest request
+    ) {
+
+        RefreshTokenEntity refreshToken =
+                refreshTokenService.verify(
+                        request.refreshToken()
+                );
+
+        UserEntity user = refreshToken.getUser();
+
+        RefreshTokenEntity newRefresh =
+                refreshTokenService.rotate(refreshToken);
+
+        String accessToken =
+                jwtService.generateAccessToken(
+                        new CustomUserDetails(user)
+                );
+
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(newRefresh.getToken())
+                .expiresIn(jwtProperties.getAccessExpiration())
+                .build();
+
+    }
+
+    @Override
+    public void logout() {
+
+        UserEntity user = userRepository.findById(
+                SecurityUtils.getCurrentUserId()
+        ).orElseThrow(
+                () -> new UserNotFoundException("User not found with id: " + SecurityUtils.getCurrentUserId())
+        );
+
+        refreshTokenService.revokeAll(user);
+
     }
 }

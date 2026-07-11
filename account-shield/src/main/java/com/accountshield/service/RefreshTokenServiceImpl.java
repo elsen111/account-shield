@@ -1,7 +1,7 @@
 package com.accountshield.service;
 
 
-import com.accountshield.dto.auth.TokenResponse;
+import com.accountshield.dto.auth.AuthResponse;
 import com.accountshield.entity.RefreshTokenEntity;
 import com.accountshield.entity.UserEntity;
 import com.accountshield.exception.InvalidTokenException;
@@ -81,7 +81,7 @@ public class RefreshTokenServiceImpl
     }
 
     @Override
-    public TokenResponse refresh(String refreshToken) {
+    public AuthResponse refresh(String refreshToken) {
         return null;
     }
 

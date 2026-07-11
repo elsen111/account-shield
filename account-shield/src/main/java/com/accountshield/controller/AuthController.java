@@ -3,7 +3,7 @@ package com.accountshield.controller;
 import com.accountshield.common.ApiResponse;
 import com.accountshield.dto.auth.LoginRequest;
 import com.accountshield.dto.auth.RefreshTokenRequest;
-import com.accountshield.dto.auth.TokenResponse;
+import com.accountshield.dto.auth.AuthResponse;
 import com.accountshield.dto.auth.RegisterRequest;
 import com.accountshield.dto.common.UserResponse;
 import com.accountshield.service.AuthService;
@@ -14,10 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(
         name = "Authentication",
@@ -54,11 +51,11 @@ public class AuthController {
             description = "Authenticates a user and returns a JWT access token."
     )
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<TokenResponse>> register(
+    public ResponseEntity<ApiResponse<AuthResponse>> register(
             @Valid @RequestBody LoginRequest request
     ) {
 
-        TokenResponse response = authService.login(request);
+        AuthResponse response = authService.login(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -66,17 +63,33 @@ public class AuthController {
 
     }
 
+    @Operation(summary = "Refresh the token")
     @PostMapping("/refresh")
-    public TokenResponse refresh(
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(
+
+            @Valid
             @RequestBody
             RefreshTokenRequest request
     ) {
 
-        return refreshTokenService.refresh(
-                request.refreshToken()
-        );
+        AuthResponse response = authService.refresh(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Token refreshed", response));
 
     }
 
+    @Operation(summary = "Logout from the account")
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<AuthResponse>> logout() {
+
+        authService.logout();
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Logged out successfully", null));
+
+    }
 
 }
