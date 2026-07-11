@@ -1,10 +1,7 @@
 package com.accountshield.controller;
 
 import com.accountshield.common.ApiResponse;
-import com.accountshield.dto.auth.LoginRequest;
-import com.accountshield.dto.auth.RefreshTokenRequest;
-import com.accountshield.dto.auth.AuthResponse;
-import com.accountshield.dto.auth.RegisterRequest;
+import com.accountshield.dto.auth.*;
 import com.accountshield.dto.common.UserResponse;
 import com.accountshield.service.AuthService;
 import com.accountshield.service.RefreshTokenService;
@@ -90,6 +87,36 @@ public class AuthController {
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Logged out successfully", null));
 
+    }
+
+    @Operation(
+            summary = "Verify email",
+            description = "Confirms a user's email address using the verification token sent at registration."
+    )
+    @PostMapping("/verify-email")
+    public ResponseEntity<ApiResponse<Void>> verifyEmail(
+            @Valid @RequestBody VerifyEmailRequest request
+    ) {
+        authService.verifyEmail(request);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("Email verified successfully", null));
+    }
+
+    @Operation(
+            summary = "Resend verification email",
+            description = "Issues a new verification token and simulates re-sending the verification email."
+    )
+    @PostMapping("/resend-verification")
+    public ResponseEntity<ApiResponse<Void>> resendVerification(
+            @Valid @RequestBody ResendVerificationRequest request
+    ) {
+        authService.resendVerification(request);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("Verification email resent", null));
     }
 
 }

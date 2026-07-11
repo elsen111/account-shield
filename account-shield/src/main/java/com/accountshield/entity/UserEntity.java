@@ -44,6 +44,12 @@ public class UserEntity extends BaseEntity {
     @Column(nullable = false)
     private boolean emailVerified = false;
 
+    @Column(name = "verification_token", length = 100)
+    private String verificationToken;
+
+    @Column(name = "verification_token_expiry")
+    private LocalDateTime verificationTokenExpiry;
+
     @Builder.Default
     @Column(nullable = false)
     private int failedLoginAttempt = 0;

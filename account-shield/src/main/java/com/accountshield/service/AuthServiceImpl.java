@@ -1,21 +1,18 @@
 package com.accountshield.service;
 
-import com.accountshield.dto.auth.AuthResponse;
-import com.accountshield.dto.auth.LoginRequest;
-import com.accountshield.dto.auth.RefreshTokenRequest;
-import com.accountshield.dto.auth.RegisterRequest;
+import com.accountshield.dto.auth.*;
 import com.accountshield.dto.common.UserResponse;
 import com.accountshield.entity.RefreshTokenEntity;
 import com.accountshield.entity.UserEntity;
 import com.accountshield.enums.Role;
 import com.accountshield.enums.UserStatus;
-import com.accountshield.exception.EmailExistsException;
-import com.accountshield.exception.UserNotFoundException;
+import com.accountshield.exception.*;
 import com.accountshield.mapper.UserMapper;
 import com.accountshield.repository.UserRepository;
 import com.accountshield.security.custom.CustomUserDetails;
 import com.accountshield.security.jwt.JwtProperties;
 import com.accountshield.security.jwt.JwtService;
+import com.accountshield.security.utils.EmailVerificationProperties;
 import com.accountshield.security.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +21,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +42,9 @@ public class AuthServiceImpl implements AuthService {
 
     private final LoginAttemptService  loginAttemptService;
 
+    private final EmailService emailService;
+    private final EmailVerificationProperties verificationProperties;
+
     @Override
     @Transactional
     public UserResponse register(RegisterRequest request) {
@@ -53,11 +56,18 @@ public class AuthServiceImpl implements AuthService {
         UserEntity user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);
-        user.setStatus(UserStatus.ACTIVE);
+        user.setStatus(UserStatus.PENDING_VERIFICATION);
+        user.setEmailVerified(false);
+        user.setVerificationToken(UUID.randomUUID().toString());
+        user.setVerificationTokenExpiry(
+                LocalDateTime.now().plusMinutes(verificationProperties.getTokenExpirationMinutes())
+        );
+
         userRepository.saveAndFlush(user);
 
-        return userMapper.toResponse(user);
+        emailService.sendVerificationEmail(user.getEmail(), user.getVerificationToken());
 
+        return userMapper.toResponse(user);
     }
 
     @Override
@@ -67,6 +77,10 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(
                         () ->  new UserNotFoundException("User not found with email: " + request.getEmail())
                 );
+
+        if (!user.isEmailVerified()) {
+            throw new EmailNotVerifiedException("Please verify your email before logging in.");
+        }
 
         loginAttemptService.validateLogin(user);
 
@@ -142,5 +156,54 @@ public class AuthServiceImpl implements AuthService {
 
         refreshTokenService.revokeAll(user);
 
+    }
+
+    @Override
+    @Transactional
+    public void verifyEmail(VerifyEmailRequest request) {
+
+        UserEntity user = userRepository.findByVerificationToken(request.token())
+                .orElseThrow(
+                        () -> new InvalidVerificationTokenException("Verification token is invalid.")
+                );
+
+        if (user.isEmailVerified()) {
+            throw new BadRequestException("Email is already verified.");
+        }
+
+        if (user.getVerificationTokenExpiry() == null
+                || user.getVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new InvalidVerificationTokenException("Verification token has expired.");
+        }
+
+        user.setEmailVerified(true);
+        user.setStatus(UserStatus.ACTIVE);
+        user.setVerificationToken(null);
+        user.setVerificationTokenExpiry(null);
+
+        userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void resendVerification(ResendVerificationRequest request) {
+
+        UserEntity user = userRepository.findByEmail(request.email())
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found with email: " + request.email())
+                );
+
+        if (user.isEmailVerified()) {
+            throw new BadRequestException("Email is already verified.");
+        }
+
+        user.setVerificationToken(UUID.randomUUID().toString());
+        user.setVerificationTokenExpiry(
+                LocalDateTime.now().plusMinutes(verificationProperties.getTokenExpirationMinutes())
+        );
+
+        userRepository.save(user);
+
+        emailService.sendVerificationEmail(user.getEmail(), user.getVerificationToken());
     }
 }
