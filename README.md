@@ -60,7 +60,7 @@ The app is happy with defaults for local dev, but a few things you'll want to se
 ./gradlew bootRun
 ```
 
-By default (no profile set), the app runs in "dev mode" — verification emails aren't actually sent, they're just logged to your console so you can copy the token straight out of the terminal. See the [email verification](#email-verification-how-it-actually-works) section below for the full story, including how to switch on real emails.
+By default (no profile set), the app runs in "dev mode" — verification emails aren't actually sent, they're just logged to your console so you can copy the token straight out of the terminal. 
 
 The app comes up on `http://localhost:8080`.
 
