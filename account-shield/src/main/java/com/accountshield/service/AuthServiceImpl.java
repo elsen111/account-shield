@@ -21,6 +21,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +39,8 @@ public class AuthServiceImpl implements AuthService {
 
     private final JwtService jwtService;
     private final JwtProperties  jwtProperties;
+
+    private final LoginAttemptService  loginAttemptService;
 
     @Override
     @Transactional
@@ -58,24 +61,37 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
     public AuthResponse login(LoginRequest request) {
-
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
 
         UserEntity user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(
-                        () -> new UserNotFoundException("User not found with email: " + request.getEmail())
+                        () ->  new UserNotFoundException("User not found with email: " + request.getEmail())
                 );
 
-        String accessToken = jwtService.generateAccessToken(
-                new CustomUserDetails(user)
-        );
+        loginAttemptService.validateLogin(user);
+
+        try {
+
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+
+        } catch (AuthenticationException ex) {
+
+            loginAttemptService.loginFailed(user);
+
+            throw ex;
+        }
+
+        loginAttemptService.loginSucceeded(user);
+
+        String accessToken =
+                jwtService.generateAccessToken(
+                        new CustomUserDetails(user)
+                );
 
         RefreshTokenEntity refreshToken =
                 refreshTokenService.create(user);
@@ -85,7 +101,6 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshToken.getToken())
                 .expiresIn(jwtProperties.getAccessExpiration())
                 .build();
-
     }
 
     @Override

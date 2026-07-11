@@ -28,6 +28,11 @@ jwt:
   access-expiration: 900000
   refresh-expiration: 604800000
 
+  security:
+    login:
+      max-attempts: 5
+      lock-duration-minutes: 15
+
 logging:
   level:
     org.springframework.security: INFO

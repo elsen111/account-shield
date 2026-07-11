@@ -5,6 +5,8 @@ import com.accountshield.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -49,5 +51,8 @@ public class UserEntity extends BaseEntity {
     @Builder.Default
     @Column(nullable = false)
     private boolean accountLocked = false;
+
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
 
 }
